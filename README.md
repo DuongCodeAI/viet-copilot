@@ -29,19 +29,17 @@ Ghép 4 repo thành phần:
 | [vi-diacritics-transformer](https://github.com/DuongCodeAI/vi-diacritics-transformer) | thêm dấu cho lệnh gõ không dấu |
 | [vi-function-calling-slm](https://github.com/DuongCodeAI/vi-function-calling-slm) | "bộ não" gọi tool, model 1.7B chạy offline |
 
-## Một đoạn demo (chế độ replay)
+## Cảnh báo biển báo (output thật, dữ liệu luật thật, chạy trên laptop)
 
 ```
-[  4.0s] tài xế: nóng quá, cho máy lạnh xuống 22 độ đi
-[  5.3s] trợ lý: Đã chỉnh điều hoà tất cả 22 độ.
-[ 12.4s] trợ lý: Phía trước có biển cấm đi ngược chiều. Ô tô vi phạm bị phạt 18 triệu đến 20 triệu đồng, trừ 4 điểm bằng lái.
-[ 28.0s] tài xế: mở cửa sau bên trái giúp mình
-[ 29.1s] trợ lý: Xe đang chạy 40 km/h, mình không mở cửa được ạ.
-[ 47.9s] trợ lý: Anh có vẻ mệt rồi, nên dừng nghỉ một chút. Có trạm cách 3,2 km trên đường đi...
+ô tô   P.102   Phía trước có biển cấm đi ngược chiều. Ô tô vi phạm bị phạt 18 triệu đến 20 triệu đồng, trừ 4 điểm bằng lái.
+ô tô   P.131a  Phía trước có biển cấm đỗ xe. Ô tô vi phạm bị phạt 800 nghìn đến 1 triệu đồng.
+xe máy P.102   Phía trước có biển cấm đi ngược chiều. Xe máy vi phạm bị phạt 4 triệu đến 6 triệu đồng, trừ 2 điểm bằng lái.
+xe máy P.123a  Phía trước có biển cấm rẽ trái. Xe máy vi phạm bị phạt 600 nghìn đến 800 nghìn đồng.
+ô tô   P.127   Phía trước có biển tốc độ tối đa cho phép.
 ```
 
-> Đoạn trên minh hoạ định dạng log. Các câu cảnh báo biển báo là output thật (dữ liệu luật thật, đo trên laptop);
-> phần lệnh giọng nói chờ model function-calling train xong.
+Đoạn hội thoại bằng giọng nói sẽ được thêm sau khi model function-calling train xong (`copilot replay` ghi log vào `logs/replay.json`).
 
 ## Latency trên laptop (CPU, 4 luồng)
 
