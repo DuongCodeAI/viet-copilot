@@ -33,7 +33,8 @@ class VehicleSim:
         """VehicleState của vi_fc để đưa vào prompt (import muộn: chạy được khi chưa cài vi_fc)."""
         from vi_fc.state import VehicleState
 
-        return VehicleState(speed_kmh=self.speed_kmh, gear=self.gear, is_night=self.is_night,
+        gear = "D" if self.speed_kmh > 0 and self.gear == "P" else self.gear  # đang chạy mà số P là vô lý
+        return VehicleState(speed_kmh=self.speed_kmh, gear=gear, is_night=self.is_night,
                             battery_pct=self.battery_pct, range_km=self.range_km, doors_locked=self.doors_locked)
 
     def execute(self, name: str, args: dict) -> str:

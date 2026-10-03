@@ -44,9 +44,12 @@ def build(cfg: dict, need_brain: bool = True):
 
         b = cfg["brain"]
         if b["backend"] == "llama_cpp":
-            parts["brain"] = FunctionCaller.from_gguf(b["gguf"], n_threads=cfg["threads"])
-        else:
-            parts["brain"] = FunctionCaller.from_openai(b["base_url"], b["model"], api_key=os.getenv("GROQ_API_KEY"))
+            brain = FunctionCaller("llama_cpp", b["gguf"], n_threads=cfg["threads"])
+        else:  # Groq hoặc llama.cpp server, dùng khi máy quá yếu / chưa có GGUF
+            brain = FunctionCaller("openai", b["model"], base_url=b["base_url"], api_key=os.getenv("GROQ_API_KEY"))
+        # lượt đầu của llama.cpp phải xử lý cả system prompt + 17 tool (~5k ký tự); làm trước cho lệnh đầu không chậm
+        print(f"warmup bộ não: {brain.warmup():.1f}s")
+        parts["brain"] = brain
     return parts
 
 
