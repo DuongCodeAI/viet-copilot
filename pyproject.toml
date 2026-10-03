@@ -1,0 +1,42 @@
+[project]
+name = "viet-copilot"
+version = "0.1.0"
+description = "Trợ lý lái xe tiếng Việt chạy offline trên laptop: nghe lệnh, nhìn đường, theo dõi tài xế, tra luật"
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{ name = "Tiến Dương", email = "duongcodeai2@gmail.com" }]
+dependencies = ["numpy>=1.26", "pyyaml>=6"]
+
+[project.optional-dependencies]
+# các repo thành phần, cài từ GitHub
+parts = [
+    "vnlaw-rag[onnx] @ git+https://github.com/DuongCodeAI/vn-traffic-law-rag",
+    "vn-dashcam-vision[infer] @ git+https://github.com/DuongCodeAI/vn-dashcam-vision",
+    "vi-diacritics[infer] @ git+https://github.com/DuongCodeAI/vi-diacritics-transformer",
+    "vi-fc[infer] @ git+https://github.com/DuongCodeAI/vi-function-calling-slm",
+]
+live = ["faster-whisper>=1.1", "sounddevice>=0.4", "mediapipe>=0.10", "opencv-python-headless>=4.9", "piper-tts>=1.2"]
+dev = ["pytest>=8", "ruff>=0.5", "pytest-asyncio>=0.23"]
+
+[project.scripts]
+copilot = "copilot.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
