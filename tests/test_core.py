@@ -73,7 +73,12 @@ def test_yawns_trigger_warning():
 def test_fines_text():
     assert parse_fine("1. Phạt tiền từ 800.000 đồng đến 1.000.000 đồng đối với") == (800_000, 1_000_000)
     assert speak_money(800_000) == "800 nghìn" and speak_money(1_500_000) == "1,5 triệu"
-    hits = [{"text": "Điều 6...\n3. Phạt tiền từ 800.000 đồng đến 1.000.000 đồng đối với ...\ne) Đỗ xe nơi có biển"},
-            {"text": "b) Thực hiện hành vi ... bị trừ điểm giấy phép lái xe 02 điểm"}]
-    msg = sign_warning("Cấm đỗ xe", "ô tô", hits)
+    fine = {"id": "d6/k3/e", "text": "Điều 6...\n3. Phạt tiền từ 800.000 đồng đến 1.000.000 đồng đối với ...\ne) Đỗ xe"}
+    pts = {"id": "d6/k16/a", "expanded_from": "d6/k3/e", "text": "a) Thực hiện hành vi ... bị trừ điểm giấy phép lái xe 02 điểm"}
+    other = {"id": "d6/k16/b", "expanded_from": "d6/k9/a", "text": "b) ... bị trừ điểm giấy phép lái xe 04 điểm"}
+    msg = sign_warning("Cấm đỗ xe", "ô tô", [fine, other, pts])
     assert msg == "Phía trước có biển cấm đỗ xe. Ô tô vi phạm bị phạt 800 nghìn đến 1 triệu đồng, trừ 2 điểm bằng lái."
+    # điểm trừ của hành vi khác không được đọc nhầm
+    assert sign_warning("Cấm đỗ xe", "ô tô", [fine, other]).endswith("1 triệu đồng.")
+    assert sign_warning("Tốc độ tối đa cho phép", "ô tô", [fine], speak_fine=False) == \
+        "Phía trước có biển tốc độ tối đa cho phép."

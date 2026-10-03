@@ -36,13 +36,29 @@ def _text(h) -> str:
     return h.chunk["text"] if hasattr(h, "chunk") else h["text"]
 
 
-def sign_warning(sign_name: str, vehicle: str, hits: list) -> str:
-    """hits: kết quả LawRAG.lookup_sign (đã đúng loại xe). Lấy mức phạt ở đoạn đầu tiên có mức phạt."""
+def _id(h) -> str | None:
+    return h.id if hasattr(h, "id") else h.get("id")
+
+
+def _expanded_from(h) -> str | None:
+    return h.expanded_from if hasattr(h, "expanded_from") else h.get("expanded_from")
+
+
+def sign_warning(sign_name: str, vehicle: str, hits: list, speak_fine: bool = True) -> str:
+    """hits: kết quả LawRAG.lookup_sign (đã đúng loại xe). Lấy mức phạt ở đoạn đầu tiên có mức phạt.
+
+    Số điểm bị trừ chỉ lấy từ đoạn được kéo theo do tham chiếu tới CHÍNH đoạn có mức phạt đó;
+    lấy từ đoạn bất kỳ thì có thể đọc nhầm số điểm của hành vi khác.
+    speak_fine=False cho biển mà mức phạt phụ thuộc tình huống (vd. tốc độ tối đa: quá 5 hay quá 35 km/h).
+    """
     msg = f"Phía trước có biển {sign_name.lower()}."
-    fine = next((f for f in (parse_fine(_text(h)) for h in hits) if f), None)
-    if fine is None:
+    if not speak_fine:
         return msg
-    lo, hi = fine
+    main = next((h for h in hits if parse_fine(_text(h)) and not _expanded_from(h)), None)
+    if main is None:
+        return msg
+    lo, hi = parse_fine(_text(main))
     msg += f" {vehicle.capitalize()} vi phạm bị phạt {speak_money(lo)} đến {speak_money(hi)} đồng"
-    pts = next((p for p in (parse_points(_text(h)) for h in hits) if p), None)
+    pts = next((p for h in hits if _expanded_from(h) and _expanded_from(h) == _id(main)
+                for p in [parse_points(_text(h))] if p), None)
     return msg + (f", trừ {pts} điểm bằng lái." if pts else ".")

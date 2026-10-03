@@ -39,6 +39,7 @@ class Copilot:
         self.sign_cd, self.drowsy_cd = sign_cooldown_s, drowsy_cooldown_s
         self.clock = clock
         self._last_sign: dict[str, float] = {}
+        self._sign_cache: dict[tuple[str, str], str | None] = {}
         self._last_drowsy = -1e9
         self.turns: list[Turn] = []
         if law is not None:
@@ -76,13 +77,19 @@ class Copilot:
         now = self.clock()
         if now - self._last_sign.get(ev.code, -1e9) < self.sign_cd or self.law is None:
             return None
-        info = await asyncio.to_thread(self.law.lookup_sign, ev.code, self.vehicle_kind, 3)
-        if info is None:  # biển không có trong bảng tra (biển chỉ dẫn...) -> im lặng
+        key = (ev.code.upper(), self.vehicle_kind)
+        t0 = time.perf_counter()
+        if key not in self._sign_cache:
+            # tra luật mất 1-2s trên laptop (reranker), nhưng cùng biển + cùng loại xe thì kết quả không đổi
+            info = await asyncio.to_thread(self.law.lookup_sign, ev.code, self.vehicle_kind, 3)
+            self._sign_cache[key] = None if info is None else sign_warning(
+                info.name, self.vehicle_kind, info.hits, speak_fine=getattr(info, "speak_fine", True))
+        out = self._sign_cache[key]
+        if out is None:  # biển không có trong bảng tra (biển chỉ dẫn...) -> im lặng
             return None
         self._last_sign[ev.code] = now
-        out = sign_warning(info.name, self.vehicle_kind, info.hits)
         await self.say(out)
-        return self._log("sign", ev.code, out)
+        return self._log("sign", ev.code, out, {"lookup": (time.perf_counter() - t0) * 1e3})
 
     async def on_drowsy(self, st) -> Turn | None:
         now = self.clock()
