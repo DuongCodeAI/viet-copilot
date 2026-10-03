@@ -1,0 +1,16 @@
+# đường dẫn tương đối tính từ thư mục viet-copilot
+vehicle_kind: ô tô          # ô tô | xe máy (ảnh hưởng điều khoản luật được tra)
+threads: 4
+
+law_data: ../vn-traffic-law-rag/data                # cần chạy prepare_local_models.py bên repo đó trước
+law_models: ../vn-traffic-law-rag/models
+dashcam_models: models/dashcam                      # detector_1cls.onnx, signnet.onnx, names.json
+diacritics: models/diacritics                       # tagger.int8.onnx + vocab.json
+brain:
+  backend: llama_cpp                                # llama_cpp | openai (Groq / llama.cpp server)
+  gguf: models/vi-fc-qwen3-1.7b-Q4_K_M.gguf
+  base_url: https://api.groq.com/openai/v1          # dùng khi backend=openai
+  model: openai/gpt-oss-20b
+stt: models/phowhisper-small-ct2-int8
+tts: models/piper/vi_VN-vais1000-medium.onnx
+face: models/face_landmarker.task

@@ -1,0 +1,8 @@
+# kịch bản lệnh giọng nói cho video demo (t = giây kể từ lúc bắt đầu replay)
+# thay "text" bằng "wav: demo/cmd_01.wav" để đi qua STT thật
+- {t: 4, text: "nóng quá, cho máy lạnh xuống 22 độ đi"}
+- {t: 15, text: "pin con bao nhieu"}
+- {t: 28, text: "mở cửa sau bên trái giúp mình"}
+- {t: 40, text: "tìm trạm sạc nhanh gần đây"}
+- {t: 55, text: "vượt đèn vàng có bị phạt không"}
+- {t: 70, text: "bật bài Lạc Trôi"}
