@@ -90,6 +90,8 @@ async def _replay(args, cfg):
                  vehicle_kind=cfg["vehicle_kind"], restorer=parts.get("restorer"))
     stop = asyncio.Event()
     t0 = time.monotonic()
+    print("đang tra trước luật cho các biển báo...")
+    await cp.warm_sign_cache()
     runner = asyncio.create_task(cp.run(stop))
     tasks = []
     if args.dashcam:

@@ -91,6 +91,18 @@ class Copilot:
         await self.say(out)
         return self._log("sign", ev.code, out, {"lookup": (time.perf_counter() - t0) * 1e3})
 
+    async def warm_sign_cache(self):
+        """Tra trước mọi biển trong bảng lúc khởi động (~40s, chạy nền) để lần thấy biển đầu tiên nói ngay."""
+        if self.law is None:
+            return
+        for code in list(getattr(self.law, "sign_map", {})):
+            key = (code.upper(), self.vehicle_kind)
+            if key in self._sign_cache:
+                continue
+            info = await asyncio.to_thread(self.law.lookup_sign, code, self.vehicle_kind, 3)
+            self._sign_cache[key] = None if info is None else sign_warning(
+                info.name, self.vehicle_kind, info.hits, speak_fine=getattr(info, "speak_fine", True))
+
     async def on_drowsy(self, st) -> Turn | None:
         now = self.clock()
         cd = self.drowsy_cd / 3 if st.level == "alarm" else self.drowsy_cd
