@@ -76,6 +76,10 @@ copilot replay --dashcam drive.mp4 --cabin face.mp4 --script demo/script.yaml --
 
 Cấu hình đường dẫn trong `configs/default.yaml`. Thành phần nào thiếu model thì tự tắt và báo.
 
+Fine-tune PhoWhisper chịu ồn: `notebooks/01_finetune_phowhisper_noise` (Kaggle hoặc Colab, T4).
+Chạy trên Colab: mở notebook từ GitHub (File → Open notebook → GitHub → DuongCodeAI/viet-copilot), chọn T4 GPU,
+thêm Secret `HF_TOKEN`. Checkpoint + model lưu vào Google Drive (`MyDrive/ai-portfolio/viet-copilot`), tiếng ồn tự thu để ở `xe-noise/` trong đó.
+
 ## Hạn chế
 
 - Xe là giả lập (`vehicle.py`); tool dẫn đường / trạm sạc trả dữ liệu mẫu.
