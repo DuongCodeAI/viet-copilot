@@ -56,10 +56,10 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
 | thành phần | p50 | ghi chú |
 |---|---|---|
 | tra luật cho biển báo | < 1 ms | biển cấm/hiệu lệnh ghim sẵn điểm luật; biển còn lại (tốc độ, chiều cao) tìm kiếm ~0.7-1 s, có cache |
-| biển báo -> câu cảnh báo | ~2 ms | regex lấy mức phạt, không gọi LLM |
+| biển báo -> câu cảnh báo | < 0.1 ms | regex lấy mức phạt, không gọi LLM |
 | STT PhoWhisper-small int8 | **~3.1 s** | nút thắt chính: Whisper luôn chạy encoder trên cửa sổ 30 s; tiny 0.5 s nhưng WER gấp ~4 lần (bảng dưới) |
 | function calling Qwen3-1.7B Q4 | chưa đo | đợi GGUF fine-tune (đang train); bản Qwen3 gốc chưa fine-tune: ~1.7-2.6 s/lệnh |
-| TTS Piper (vi_VN-vais1000-medium) | ~0.3 s | câu ngắn ~0.2 s, câu cảnh báo dài nhất ~0.7 s; RTF ~0.1 |
+| TTS Piper (vi_VN-vais1000-medium) | 0.1-0.5 s | câu lệnh ngắn 0.1-0.15 s, câu cảnh báo dài nhất (5.4 s tiếng) 0.5 s; RTF ~0.1 |
 | mục tiêu lệnh giọng nói end-to-end | < 1.5 s | **chưa đạt**: riêng STT đã ~3 s, cả vòng ước ~4-6 s trên laptop CPU |
 
 ## Quyết định thiết kế
@@ -118,14 +118,17 @@ nên demo dùng bản gốc đổi sang CTranslate2 int8. Muốn thử lại th�
 
 ```bash
 pip install -e ".[parts,live]"
-python scripts/download_models.py           # ~1.6GB vào models/; STT tự đổi PhoWhisper sang CT2 (cần torch + transformers)
+python scripts/download_models.py           # ~1.5GB vào models/; STT tự đổi PhoWhisper sang CT2 (cần torch + transformers)
 copilot chat                                # gõ lệnh, không cần mic/camera
 python scripts/make_voice_cmds.py           # tạo wav lệnh (giọng Piper) cho demo/script_voice.yaml
 copilot replay --script demo/script_voice.yaml          # lệnh đi qua STT thật, log latency vào logs/replay.json
 copilot replay --dashcam drive.mp4 --cabin face.mp4 --script demo/script.yaml --speak   # đủ camera + loa
 ```
 
-Cấu hình đường dẫn trong `configs/default.yaml`. Thành phần nào thiếu model thì tự tắt và báo.
+Cấu hình đường dẫn trong `configs/default.yaml`. Tra luật, thêm dấu, camera, mic thiếu model thì tự tắt và báo.
+Riêng bộ não gọi tool là bắt buộc cho `chat`/`replay`: chưa có GGUF thì chương trình báo cách lấy rồi dừng,
+hoặc đổi `brain.backend: openai` để gọi Groq (cần `GROQ_API_KEY`). Model nào chưa có trên HF thì
+`download_models.py` báo "bỏ qua" và vẫn tải các phần còn lại.
 
 Fine-tune PhoWhisper chịu ồn: `notebooks/01_finetune_phowhisper_noise` (Kaggle hoặc Colab, T4).
 Chạy trên Colab: mở notebook từ GitHub (File → Open notebook → GitHub → DuongCodeAI/viet-copilot), chọn T4 GPU,
@@ -137,3 +140,4 @@ thêm Secret `HF_TOKEN`. Checkpoint + model lưu vào Google Drive (`MyDrive/ai-
 - Lệnh giọng nói end-to-end trên laptop CPU chưa đạt 1.5 s (STT small ~3 s, xem mục STT).
 - STT dùng PhoWhisper-small gốc (BSD-3). VIVOS (CC BY-NC-SA) chỉ dùng để đánh giá và thử fine-tune.
 - Phát hiện buồn ngủ thử bằng webcam laptop, chưa thử trong cabin thật (ánh sáng, góc camera khác).
+- Nhận diện biển báo train trên ảnh dashcam ô tô (VNTS), chưa đo trên video từ xe máy.
