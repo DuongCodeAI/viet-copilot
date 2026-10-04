@@ -37,7 +37,17 @@ Ghép 4 repo thành phần:
 xe máy P.102   Phía trước có biển cấm đi ngược chiều. Xe máy vi phạm bị phạt 4 triệu đến 6 triệu đồng, trừ 2 điểm bằng lái.
 xe máy P.123a  Phía trước có biển cấm rẽ trái. Xe máy vi phạm bị phạt 600 nghìn đến 800 nghìn đồng.
 ô tô   P.127   Phía trước có biển tốc độ tối đa cho phép.
+ô tô   P.127*50  Phía trước có biển tốc độ tối đa cho phép 50 km/h.
+ô tô   P.103a  Phía trước có biển cấm xe ô tô. Ô tô vi phạm bị phạt 4 triệu đến 6 triệu đồng, trừ 2 điểm bằng lái.
+xe máy P.103a  Phía trước có biển cấm xe ô tô.
+xe máy P.104   Phía trước có biển cấm xe mô tô và xe máy. Xe máy vi phạm bị phạt 2 triệu đến 3 triệu đồng, trừ 2 điểm bằng lái.
 ```
+
+Bug đã sửa (04/10/2026), soát cả 52 mã biển của VNTS × 2 loại xe: trước chỉ 15/104 cặp ra câu cảnh báo đúng.
+Detector trả mã kèm hậu tố (`P.127*50`, `P.124a*`) không khớp bảng tra nên im lặng; còn tìm kiếm thì có lúc lấy
+nhầm khoản "gây tai nạn" (P.103a "cấm ô tô" lại phạt xe máy 10-14 triệu). Giờ biển cấm/hiệu lệnh ghim thẳng điểm
+luật NĐ 168 theo loại xe (soát tay), biển không áp dụng cho loại xe đang lái thì chỉ đọc tên: 88/104 cặp có cảnh
+báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫn/biển phụ.
 
 Đoạn hội thoại bằng giọng nói sẽ được thêm sau khi model function-calling train xong (`copilot replay` ghi log vào `logs/replay.json`).
 
@@ -45,7 +55,7 @@ xe máy P.123a  Phía trước có biển cấm rẽ trái. Xe máy vi phạm b�
 
 | thành phần | p50 | ghi chú |
 |---|---|---|
-| tra luật cho biển báo (lần đầu) | ~1.3-2 s | hybrid retrieval + rerank; **2 ms** khi đã cache, tra trước lúc khởi động |
+| tra luật cho biển báo | < 1 ms | biển cấm/hiệu lệnh ghim sẵn điểm luật; biển còn lại (tốc độ, chiều cao) tìm kiếm ~0.7-1 s, có cache |
 | biển báo -> câu cảnh báo | ~2 ms | regex lấy mức phạt, không gọi LLM |
 | STT PhoWhisper-small int8 | chưa đo | |
 | function calling Qwen3-1.7B Q4 | chưa đo | |
