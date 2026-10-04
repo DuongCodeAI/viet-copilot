@@ -72,6 +72,10 @@ async def _replay(args, cfg):
 
     parts = build(cfg)
     stt = tts = None
+    if args.script and any("wav" in it for it in yaml.safe_load(open(args.script, encoding="utf-8"))):
+        from .speech import STT
+
+        stt = STT(cfg["stt"], threads=cfg["threads"])
     if args.speak:
         from .speech import TTS
 
@@ -102,7 +106,7 @@ async def _replay(args, cfg):
     if args.cabin:
         tasks.append(cabin_source(bus, args.cabin, cfg["face"], stats=stats))
     if args.script:
-        tasks.append(script_source(bus, args.script, stt))
+        tasks.append(script_source(bus, args.script, stt, stats=stats))
     await asyncio.gather(*tasks)
     await asyncio.sleep(3)  # chờ trợ lý nói nốt
     stop.set()

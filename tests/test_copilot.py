@@ -136,3 +136,18 @@ def test_sign_tool_uses_vehicle_kind_and_speak_fine():
     out = v._t_lookup_sign("P.127")
     assert seen == ["xe máy"]
     assert "triệu" not in out
+
+
+def test_vehicle_matches_tool_schema_and_survives_bad_args():
+    import inspect
+
+    from vi_fc.tools import TOOLS
+
+    for t in TOOLS:
+        f = t.get("function", t)
+        m = getattr(VehicleSim, "_t_" + f["name"], None)
+        assert m is not None, f["name"]
+        assert set(f["parameters"].get("properties", {})) <= set(inspect.signature(m).parameters), f["name"]
+    v = VehicleSim()
+    assert "Đã tắt" in v.execute("set_climate", {"power": "off"})
+    assert "chưa làm được" in v.execute("set_fan_speed", {"speed": 3})

@@ -42,10 +42,17 @@ class VehicleSim:
         fn = getattr(self, f"_t_{name}", None)
         if fn is None:
             return f"Xe chưa hỗ trợ chức năng {name}."
-        return fn(**args)
+        try:
+            return fn(**args)
+        except TypeError:  # model đưa tham số lạ / thiếu tham số: báo lại, không làm sập vòng lặp
+            return f"Mình chưa làm được lệnh {name} với tham số {args}."
 
     # ---- các tool ----
-    def _t_set_climate(self, temperature=None, zone="all", mode=None):
+    def _t_set_climate(self, temperature=None, zone="all", mode=None, power="on"):
+        if power == "off":
+            self.climate["power"] = "off"
+            return "Đã tắt điều hoà."
+        self.climate["power"] = "on"
         if temperature is not None:
             self.climate["temperature"] = temperature
         if mode:

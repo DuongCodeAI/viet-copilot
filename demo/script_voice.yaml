@@ -1,0 +1,19 @@
+# như script.yaml nhưng đi qua STT thật; wav tạo bằng Piper (giọng tổng hợp, 16 kHz)
+- t: 4
+  wav: demo/voice/cmd_01.wav
+  text: nóng quá, cho máy lạnh xuống 22 độ đi
+- t: 15
+  wav: demo/voice/cmd_02.wav
+  text: pin con bao nhieu
+- t: 28
+  wav: demo/voice/cmd_03.wav
+  text: mở cửa sau bên trái giúp mình
+- t: 40
+  wav: demo/voice/cmd_04.wav
+  text: tìm trạm sạc nhanh gần đây
+- t: 55
+  wav: demo/voice/cmd_05.wav
+  text: vượt đèn vàng có bị phạt không
+- t: 70
+  wav: demo/voice/cmd_06.wav
+  text: bật bài Lạc Trôi

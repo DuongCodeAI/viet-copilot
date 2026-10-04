@@ -91,7 +91,7 @@ async def mic_source(bus: EventBus, stt, stats: dict | None = None):
             bus.publish("speech", tr.text)
 
 
-async def script_source(bus: EventBus, script_path: str, stt=None):
+async def script_source(bus: EventBus, script_path: str, stt=None, stats: dict | None = None):
     """YAML: - {t: 12.5, text: "bật điều hoà 22 độ"}  hoặc  - {t: 30, wav: data/cmd1.wav} (đi qua STT thật)."""
     items = yaml.safe_load(open(script_path, encoding="utf-8"))
     t0 = time.monotonic()
@@ -101,7 +101,10 @@ async def script_source(bus: EventBus, script_path: str, stt=None):
             import soundfile as sf
 
             audio, sr = sf.read(it["wav"], dtype="float32")
-            text = (await asyncio.to_thread(stt, audio)).text
+            tr = await asyncio.to_thread(stt, audio)
+            text = tr.text
+            if stats is not None:
+                stats.setdefault("stt_ms", []).append(tr.ms)
         else:
             text = it["text"]
         bus.publish("speech", text)
