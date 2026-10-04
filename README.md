@@ -1,5 +1,14 @@
 # viet-copilot
 
+<!-- intro -->
+<p align="left">
+<img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python"> <img src="https://img.shields.io/badge/asyncio-3776AB?style=for-the-badge" alt="asyncio"> <img src="https://img.shields.io/badge/PhoWhisper-FF6F00?style=for-the-badge" alt="PhoWhisper"> <img src="https://img.shields.io/badge/Piper%20TTS-16A085?style=for-the-badge" alt="Piper TTS"> <img src="https://img.shields.io/badge/MediaPipe-0097A7?style=for-the-badge&logo=mediapipe&logoColor=white" alt="MediaPipe"> <img src="https://img.shields.io/badge/Offline%20CPU-2ECC71?style=for-the-badge" alt="Offline CPU">
+</p>
+
+> **Ghép thành trợ lý lái xe.** Event bus bất đồng bộ (buồn ngủ > biển báo > lệnh giọng nói), STT PhoWhisper, TTS Piper, buồn ngủ bằng EAR/PERCLOS. Cảnh báo biển báo không qua LLM: soát 52 mã biển × 2 loại xe, sửa từ 15/104 lên **88/104** cặp có cảnh báo đúng mức phạt. Fine-tune STT với tiếng ồn ra kết quả **kém hơn** bản gốc (WER sạch 2.14% → 3.13%) nên giữ bản gốc. STT small trên laptop: WER 2.8% (sạch) / 6.0% (ồn 10 dB) nhưng ~3 s/câu, nên lệnh giọng nói end-to-end mất khoảng 5,6–6 s (STT 3,4 s + LLM fine-tune 2,1 s), **chưa đạt** mục tiêu 1.5 s.
+
+> Một phần của bộ 5 dự án [Trợ lý lái xe tiếng Việt chạy offline](https://github.com/DuongCodeAI) · tác giả: Tiến Dương
+
 Trợ lý lái xe tiếng Việt **chạy offline trên laptop không GPU** (Ryzen 5 5625U, 16GB RAM):
 nghe lệnh bằng giọng nói, nhìn biển báo qua camera hành trình, theo dõi tài xế buồn ngủ, và tra luật giao thông.
 
