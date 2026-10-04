@@ -3,7 +3,7 @@
 | thành phần | nguồn | dung lượng |
 |---|---|---|
 | bộ não (function calling) | <HF_USER>/vi-fc-qwen3-1.7b-GGUF (Q4_K_M) | ~1.1GB |
-| STT | <HF_USER>/phowhisper-small-noisy-ct2-int8 (hoặc tự convert vinai/PhoWhisper-small) | ~250MB |
+| STT | vinai/PhoWhisper-small, tự đổi sang CTranslate2 int8 (cần torch + transformers, tải ~1GB) | ~240MB |
 | TTS | rhasspy/piper-voices vi_VN-vais1000-medium | ~63MB |
 | mặt tài xế | MediaPipe face_landmarker.task | ~4MB |
 | biển báo | <HF_USER>/vn-dashcam-vision (ONNX) | ~10MB |
@@ -15,6 +15,7 @@ Tài khoản HF chứa model: biến môi trường HF_USER (mặc định hgdka
 
 import argparse
 import os
+import subprocess
 import urllib.request
 from pathlib import Path
 
@@ -30,7 +31,10 @@ def get(name: str):
     if name == "brain":
         snapshot_download(f"{HF_USER}/vi-fc-qwen3-1.7b-GGUF", allow_patterns=["*Q4_K_M.gguf"], local_dir=M)
     elif name == "stt":
-        snapshot_download(f"{HF_USER}/phowhisper-small-noisy-ct2-int8", local_dir=M / "phowhisper-small-ct2-int8")
+        # bản fine-tune có ồn kém hơn bản gốc (README) -> dùng PhoWhisper-small gốc
+        subprocess.run(["ct2-transformers-converter", "--model", "vinai/PhoWhisper-small", "--output_dir",
+                        str(M / "phowhisper-small-ct2-int8"), "--quantization", "int8",
+                        "--copy_files", "tokenizer.json", "preprocessor_config.json", "--force"], check=True)
     elif name == "tts":
         for ext in ("onnx", "onnx.json"):
             p = hf_hub_download("rhasspy/piper-voices", f"vi/vi_VN/vais1000/medium/vi_VN-vais1000-medium.{ext}")
