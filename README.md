@@ -49,7 +49,27 @@ nhầm khoản "gây tai nạn" (P.103a "cấm ô tô" lại phạt xe máy 10-1
 luật NĐ 168 theo loại xe (soát tay), biển không áp dụng cho loại xe đang lái thì chỉ đọc tên: 88/104 cặp có cảnh
 báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫn/biển phụ.
 
-Đoạn hội thoại bằng giọng nói sẽ được thêm sau khi model function-calling train xong (`copilot replay` ghi log vào `logs/replay.json`).
+## Demo lệnh giọng nói (output thật, laptop CPU, 04/10/2026)
+
+`copilot replay` với GGUF fine-tune ([hgdkakhs/vi-fc-qwen3-1.7b-GGUF](https://huggingface.co/hgdkakhs/vi-fc-qwen3-1.7b-GGUF), Q4_K_M 1.03 GB),
+xe giả lập chạy 40 km/h. Cột "nghe được" là đầu ra STT khi lệnh đi qua giọng nói (wav tổng hợp bằng Piper, `demo/script_voice.yaml`):
+
+| lệnh | nghe được (STT) | trợ lý trả lời |
+|---|---|---|
+| nóng quá, cho máy lạnh xuống 22 độ đi | nắng quá cho máy lạnh xuống hai mươi hai độ đi. | Đã chỉnh điều hoà tất cả 22 độ. |
+| pin con bao nhieu (gõ không dấu) | tin con bảo e hiu. | gõ: Pin còn 80%. / giọng: Không có tin nhắn mới. |
+| mở cửa sau bên trái giúp mình | mở cửa sau bên trái giúp mình. | Mở 100% cửa sổ sau trái. |
+| tìm trạm sạc nhanh gần đây | tìm trạng sạc nhanh gần đây. | Có trạm sạc nhanh cách 3,2 km trên đường đi, còn 2 cổng trống. ... |
+| vượt đèn vàng có bị phạt không | vượt đèn vàng có bị phạt không. | (không có LLM sinh câu trả lời) trích điều khoản NĐ 168 liên quan nhất |
+| bật bài Lạc Trôi | bất bại lạm trơ. | gõ: Đang phát bài Lạc Trôi. / giọng: trả lời lạc đề về đèn xe |
+
+Lỗi thấy được, ghi lại chứ không giấu:
+- **"mở cửa sau"** bị hiểu thành mở cửa sổ. Câu này mơ hồ (cửa xe hay cửa sổ); đúng ra nên hỏi lại, vì mở khoá cửa lúc xe chạy
+  thì guard sẽ chặn.
+- **STT sai thì bộ não đoán bừa**: "bất bại lạm trơ" không phải lệnh nào, model vẫn gọi tool thay vì hỏi lại. Cần ngưỡng
+  tin cậy STT (vd. avg logprob) để hỏi lại khi nghe không rõ.
+- Hai câu STT sai là do Piper đọc câu không dấu / tên riêng kém, không phải giọng người thật; xem mục STT bên dưới.
+- Hỏi luật khi offline chỉ trả về điều khoản (pipeline RAG cần LLM để viết câu trả lời; có Groq thì trả lời đầy đủ).
 
 ## Latency trên laptop (CPU, 4 luồng)
 
@@ -58,9 +78,9 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
 | tra luật cho biển báo | < 1 ms | biển cấm/hiệu lệnh ghim sẵn điểm luật; biển còn lại (tốc độ, chiều cao) tìm kiếm ~0.7-1 s, có cache |
 | biển báo -> câu cảnh báo | < 0.1 ms | regex lấy mức phạt, không gọi LLM |
 | STT PhoWhisper-small int8 | **~3.1 s** | nút thắt chính: Whisper luôn chạy encoder trên cửa sổ 30 s; tiny 0.5 s nhưng WER gấp ~4 lần (bảng dưới) |
-| function calling Qwen3-1.7B Q4 | chưa đo | đợi GGUF fine-tune (đang train); bản Qwen3 gốc chưa fine-tune: ~1.7-2.6 s/lệnh |
+| function calling Qwen3-1.7B Q4 (fine-tune) | **~1.9 s** | 12 lệnh trong 2 lần replay: p50 1.8 s (lệnh gõ), 2.1 s (lệnh nói), p95 2.5 s; khởi động ~20 s |
 | TTS Piper (vi_VN-vais1000-medium) | 0.1-0.5 s | câu lệnh ngắn 0.1-0.15 s, câu cảnh báo dài nhất (5.4 s tiếng) 0.5 s; RTF ~0.1 |
-| mục tiêu lệnh giọng nói end-to-end | < 1.5 s | **chưa đạt**: riêng STT đã ~3 s, cả vòng ước ~4-6 s trên laptop CPU |
+| mục tiêu lệnh giọng nói end-to-end | < 1.5 s | **chưa đạt**: đo thật STT 3.4 s + LLM 2.1 s + TTS 0.1-0.5 s ≈ **5.6-6 s** trên laptop CPU |
 
 ## Quyết định thiết kế
 
