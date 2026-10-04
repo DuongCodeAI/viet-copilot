@@ -57,10 +57,10 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
 |---|---|---|
 | tra luật cho biển báo | < 1 ms | biển cấm/hiệu lệnh ghim sẵn điểm luật; biển còn lại (tốc độ, chiều cao) tìm kiếm ~0.7-1 s, có cache |
 | biển báo -> câu cảnh báo | ~2 ms | regex lấy mức phạt, không gọi LLM |
-| STT PhoWhisper-tiny int8 (mặc định) | ~0.5-0.8 s | so sánh 3 size ở bảng dưới; dao động theo tải CPU |
+| STT PhoWhisper-small int8 | **~3.1 s** | nút thắt chính: Whisper luôn chạy encoder trên cửa sổ 30 s; tiny 0.5 s nhưng WER gấp ~4 lần (bảng dưới) |
 | function calling Qwen3-1.7B Q4 | chưa đo | |
 | TTS Piper (vi_VN-vais1000-medium) | ~0.3 s | câu ngắn ~0.2 s, câu cảnh báo dài nhất ~0.7 s; RTF ~0.1 |
-| mục tiêu lệnh giọng nói end-to-end | < 1.5 s | |
+| mục tiêu lệnh giọng nói end-to-end | < 1.5 s | **chưa đạt**: riêng STT đã ~3 s, cả vòng ước ~4-6 s trên laptop CPU |
 
 ## Quyết định thiết kế
 
@@ -73,27 +73,32 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
   function-calling) chặn lại lần nữa nếu model vẫn gọi tool.
 - **Buồn ngủ hiệu chỉnh theo người**: 10 s đầu đo EAR lúc mở mắt của chính tài xế, ngưỡng nhắm = 75%;
   ngưỡng cố định 0.25 báo nhầm người mắt một mí.
-- **STT: PhoWhisper gốc (không dùng bản fine-tune có ồn), size tiny** vì small ~3 s/câu trên laptop (xem 2 mục dưới).
+- **STT: PhoWhisper-small gốc** (không dùng bản fine-tune có ồn, không dùng tiny/base dù nhanh hơn): xem 2 mục dưới.
 
 ## STT trên laptop: chọn size nào
 
 PhoWhisper gốc của vinai, CTranslate2 int8, CPU 4 luồng, beam 1, `vad_filter` (giống `speech.STT`).
-20 câu lệnh trong xe (118 từ) tổng hợp bằng Piper rồi resample 16 kHz, mỗi câu ~1.2 s tiếng + 0.5 s lặng;
-cùng một bộ audio cho cả 3 model, chạy 2-3 lần: `python scripts/stt_bench.py models/phowhisper-tiny-ct2-int8`.
+WER đo trên 200 câu đầu VIVOS test, cùng cách trộn ồn tổng hợp và cùng seed với notebook 01
+(`python scripts/stt_vivos_eval.py models/phowhisper-small-ct2-int8 small`):
 
-| size | model | p50 / câu | WER (giọng Piper) |
-|---|---|---|---|
-| tiny | 42 MB | **0.53-0.84 s** | 23.7% |
-| base | 77 MB | 0.93-1.12 s | 29.7% |
-| small | 240 MB | 3.05-3.15 s | **20.3%** |
+| size | model | s / câu | WER sạch | SNR 10 dB | SNR 5 dB | SNR 0 dB |
+|---|---|---|---|---|---|---|
+| tiny | 42 MB | **0.55** | 10.52% | 13.81% | 18.97% | 32.54% |
+| base | 77 MB | 1.04 | 10.95% | 13.81% | | |
+| small | 240 MB | 3.1-3.4 | **2.78%** | **5.95%** | **8.85%** | **17.06%** |
 
-- Whisper luôn chạy encoder trên cửa sổ 30 s, nên câu lệnh 1 s cũng tốn gần bằng câu 30 s: small mất ~3 s, riêng
-  nó đã vượt ngân sách 1.5 s cho cả vòng STT → LLM → TTS. 8 luồng chỉ còn 2.9 s, không cứu được.
-- WER trên giọng tổng hợp chỉ để so 3 size với nhau (1 từ = 0.85%): cả 3 cùng sai ở chỗ giọng Piper khó nghe
-  ("sân bay" → "sân bài", "sưởi ghế" → "sở khế"). tiny chỉ kém small 3.4 điểm mà nhanh gấp ~5 lần → chọn tiny.
-  Base kém hơn cả tiny trên bộ này; mẫu nhỏ, nên không kết luận base tệ hơn tiny nói chung.
-- Chưa đo: WER của tiny trên VIVOS và trên ồn (bảng dưới chỉ có small), và trên giọng thật thu bằng mic.
-  Câu rất ngắn dễ sai nhất ("tắt nhạc đi" → "các nhạc điện" ở cả tiny và small).
+- **Chọn small**: tiny/base sai gấp ~4 lần trên giọng sạch. Base chậm gấp đôi tiny mà WER không tốt hơn,
+  nên dừng đo ở 2 mức ồn đầu.
+- **Cái giá là latency**: Whisper luôn chạy encoder trên cửa sổ 30 s, nên câu lệnh 1-2 s cũng mất ~3 s (8 luồng:
+  2.9 s). Riêng STT đã vượt ngân sách 1.5 s. Hướng giảm: cắt cửa sổ encoder theo độ dài câu (Whisper gốc không cho,
+  cần model train với input ngắn), STT streaming, hoặc GPU nhỏ trong xe.
+- **Kiểm tra engine**: small qua faster-whisper int8 + VAD ra 2.10% trên 50 câu đầu, khớp số transformers fp16 trên
+  Colab (2.14%), nên chênh lệch tiny/small là do model, không do engine. VAD giúp chút (tắt VAD: 2.74%),
+  float32 không tốt hơn int8 (2.42%). Trên 200 câu, ồn càng to thì CT2 + VAD càng kém bản Colab
+  (SNR 0: 17.06% so với 14.76%), có thể vì VAD cắt nhầm đoạn có tiếng khi ồn lớn.
+- **Bài học**: lúc đầu mình so 3 size trên 20 câu lệnh tổng hợp bằng Piper (`scripts/stt_bench.py`), tiny chỉ
+  kém small 3 điểm (23.7% so với 20.3%) nên đã chọn tiny. Đo trên giọng người thật (VIVOS) thì chênh 4 lần.
+  Giọng TTS không đại diện cho giọng người; giờ script đó chỉ dùng để đo latency.
 
 ## Fine-tune STT với tiếng ồn: thử rồi, kém hơn bản gốc
 

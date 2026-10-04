@@ -27,11 +27,11 @@ FACE_URL = ("https://storage.googleapis.com/mediapipe-models/face_landmarker/fac
             "face_landmarker.task")
 
 
-def get(name: str, stt_size: str = "tiny"):
+def get(name: str, stt_size: str = "small"):
     if name == "brain":
         snapshot_download(f"{HF_USER}/vi-fc-qwen3-1.7b-GGUF", allow_patterns=["*Q4_K_M.gguf"], local_dir=M)
     elif name == "stt":
-        # bản fine-tune có ồn kém hơn bản gốc (README) -> dùng PhoWhisper gốc; tiny mặc định vì small ~3 s/câu trên CPU
+        # bản fine-tune có ồn kém hơn bản gốc (README) -> dùng PhoWhisper gốc; small vì tiny/base WER VIVOS cao gấp ~5 lần
         subprocess.run(["ct2-transformers-converter", "--model", f"vinai/PhoWhisper-{stt_size}", "--output_dir",
                         str(M / f"phowhisper-{stt_size}-ct2-int8"), "--quantization", "int8",
                         "--copy_files", "tokenizer.json", "preprocessor_config.json", "--force"], check=True)
@@ -54,7 +54,7 @@ def get(name: str, stt_size: str = "tiny"):
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", nargs="+", default=["brain", "stt", "tts", "face", "dashcam", "diacritics"])
-    ap.add_argument("--stt-size", default="tiny", choices=["tiny", "base", "small"])
+    ap.add_argument("--stt-size", default="small", choices=["tiny", "base", "small"])
     args = ap.parse_args()
     for n in args.only:
         get(n, args.stt_size)
