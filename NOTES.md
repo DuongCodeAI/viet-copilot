@@ -33,3 +33,8 @@
 ## Việc cần làm
 - Đo latency thật từng thành phần khi có model function-calling + STT (lệnh `copilot replay` ghi `logs/replay.json`).
 - Quay video demo 2 phút.
+
+## 04/10 chạy thử pipeline chữ với Qwen3-1.7B Q4_K_M gốc (chưa fine-tune), laptop CPU 4 luồng
+- warmup 25 s, brain p50 ~1.7 s (6 lệnh trong demo/script.yaml), thêm dấu 4 ms, TTS p50 ~0.3 s
+- model gốc sai: "máy lạnh xuống 22 độ" -> chỉnh ghế phụ, "bật bài Lạc Trôi" -> quạt gió, hỏi luật -> "chưa rõ"
+- guard chặn mở cửa khi xe đang chạy hoạt động đúng

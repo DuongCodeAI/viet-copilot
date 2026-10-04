@@ -102,3 +102,21 @@ def test_run_loop_priority():
 
     said = asyncio.run(go())
     assert "nhắm mắt" in said[0]  # buồn ngủ được nói trước dù đến sau
+
+
+def test_law_lookup_uses_raw_text_not_restored():
+    class LawBrain:
+        def decide(self, text, state):
+            return FakeAction("call", [SimpleNamespace(name="lookup_traffic_law", arguments={"question": text})])
+
+    asked = []
+
+    class Vehicle(VehicleNoVifc):
+        def execute(self, name, args):
+            asked.append(args["question"])
+            return "ok"
+
+    cp = Copilot(EventBus(), Vehicle(speed_kmh=40), LawBrain(), say=lambda t: None,
+                 restorer=lambda t: "vượt đến do bị phát bao nhiêu")
+    asyncio.run(cp.on_speech("vuot den do bi phat bao nhieu"))
+    assert asked == ["vuot den do bi phat bao nhieu"]

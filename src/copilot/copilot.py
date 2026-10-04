@@ -54,6 +54,7 @@ class Copilot:
     async def on_speech(self, text: str) -> Turn:
         t0 = time.perf_counter()
         ms = {}
+        raw = text
         if self.restorer is not None:
             from vnlaw_rag.text import has_diacritics
 
@@ -64,6 +65,12 @@ class Copilot:
         action = await asyncio.to_thread(self.brain.decide, text, self.vehicle.state())
         ms["brain"] = (time.perf_counter() - t1) * 1e3
         if action.kind == "call" and action.calls:
+            if text != raw:
+                # bản thêm dấu chỉ để LLM hiểu lệnh; tra luật dùng câu gốc vì restorer hay sai đúng từ khoá
+                # ("phạt" -> "phát", "đèn đỏ" -> "đến do"): R@5 0.83 -> 0.72 trên 29 câu không dấu (README P1)
+                for c in action.calls:
+                    if c.name == "lookup_traffic_law":
+                        c.arguments["question"] = raw
             t2 = time.perf_counter()
             results = [await asyncio.to_thread(self.vehicle.execute, c.name, c.arguments) for c in action.calls]
             ms["tools"] = (time.perf_counter() - t2) * 1e3
