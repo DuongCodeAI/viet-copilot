@@ -73,7 +73,21 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
   function-calling) chặn lại lần nữa nếu model vẫn gọi tool.
 - **Buồn ngủ hiệu chỉnh theo người**: 10 s đầu đo EAR lúc mở mắt của chính tài xế, ngưỡng nhắm = 75%;
   ngưỡng cố định 0.25 báo nhầm người mắt một mí.
-- **STT chịu ồn**: fine-tune PhoWhisper-small với tiếng ồn xe trộn ngẫu nhiên SNR 0-15 dB (notebook 01).
+- **STT: dùng PhoWhisper-small gốc, không dùng bản fine-tune có ồn** (xem kết quả dưới).
+
+## Fine-tune STT với tiếng ồn: thử rồi, kém hơn bản gốc
+
+Notebook 01: PhoWhisper-small, 400 step (batch 32, ~1,1 epoch VIVOS), lr 1e-5, 70% mẫu train trộn ồn tổng hợp
+(đường, gió, máy) SNR ngẫu nhiên 0-15 dB. Đánh giá 200 câu VIVOS test, ồn test là đoạn ồn chưa dùng lúc train.
+
+| WER (%) | sạch | SNR 10 dB | SNR 5 dB | SNR 0 dB |
+|---|---|---|---|---|
+| PhoWhisper-small gốc | **2.14** | **3.81** | **6.98** | **14.76** |
+| fine-tune có ồn | 3.13 | 5.16 | 8.61 | 15.87 |
+
+Fine-tune làm tệ hơn ở mọi mức, cả giọng sạch. Mình đoán: PhoWhisper đã fine-tune trên 844h tiếng Việt nhiều giọng, nên 1 epoch VIVOS (~15h)
+không thêm gì mà chỉ làm lệch model; ồn tổng hợp cũng khác ồn thật. Bản gốc đã chịu ồn khá tốt tới SNR 5 dB (WER < 7%),
+nên demo dùng bản gốc đổi sang CTranslate2 int8. Muốn thử lại thì cần ồn thu thật trong xe và giữ lr nhỏ hơn / đóng băng encoder.
 
 ## Chạy
 
@@ -93,5 +107,5 @@ thêm Secret `HF_TOKEN`. Checkpoint + model lưu vào Google Drive (`MyDrive/ai-
 ## Hạn chế
 
 - Xe là giả lập (`vehicle.py`); tool dẫn đường / trạm sạc trả dữ liệu mẫu.
-- VIVOS (dữ liệu fine-tune STT) là CC BY-NC-SA: model STT fine-tune chỉ dùng phi thương mại.
+- STT dùng PhoWhisper-small gốc (BSD-3). VIVOS (CC BY-NC-SA) chỉ dùng để đánh giá và thử fine-tune.
 - Phát hiện buồn ngủ thử bằng webcam laptop, chưa thử trong cabin thật (ánh sáng, góc camera khác).
