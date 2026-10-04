@@ -2,10 +2,15 @@
 
 Giọng tổng hợp, không phải người thật. python scripts/make_voice_cmds.py
 """
-import sys, yaml, numpy as np, soundfile as sf
+import sys
+
+import numpy as np
+import soundfile as sf
+import yaml
 from scipy.signal import resample_poly
+
 sys.path.insert(0, "src")
-from copilot.speech import TTS
+from copilot.speech import TTS  # noqa: E402
 
 tts = TTS("models/piper/vi_VN-vais1000-medium.onnx")
 items = yaml.safe_load(open("demo/script.yaml", encoding="utf-8"))
@@ -20,4 +25,4 @@ for i, it in enumerate(items, 1):
 with open("demo/script_voice.yaml", "w", encoding="utf-8") as f:
     f.write("# như script.yaml nhưng đi qua STT thật; wav tạo bằng Piper (giọng tổng hợp, 16 kHz)\n")
     yaml.safe_dump(out, f, allow_unicode=True, sort_keys=False, width=200)
-print(open("demo/script_voice.yaml", encoding="utf-8").read())
+print("xong", len(out), "lệnh")
