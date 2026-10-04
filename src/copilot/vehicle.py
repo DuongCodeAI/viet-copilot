@@ -28,6 +28,7 @@ class VehicleSim:
     destination: str | None = None
     reminders: list = field(default_factory=list)
     law = None  # LawRAG, gắn từ ngoài
+    kind = "ô tô"  # loại xe cho tra luật, Copilot gán theo config
 
     def state(self):
         """VehicleState của vi_fc để đưa vào prompt (import muộn: chạy được khi chưa cài vi_fc)."""
@@ -119,9 +120,11 @@ class VehicleSim:
     def _t_lookup_sign(self, code):
         if self.law is None:
             return "Chưa nạp dữ liệu luật."
-        info = self.law.lookup_sign(code)
+        info = self.law.lookup_sign(code, self.kind)
         if info is None:
             return f"Mình chưa có thông tin biển {code}."
         from .fines import sign_warning
 
-        return sign_warning(info.name, "xe", info.hits).replace("Phía trước có biển", "Biển này là")
+        # giống on_sign: mức phạt theo đúng loại xe, biển tốc độ thì không đọc số
+        out = sign_warning(info.name, self.kind, info.hits, speak_fine=getattr(info, "speak_fine", True))
+        return out.replace("Phía trước có biển", "Biển này là")

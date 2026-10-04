@@ -42,6 +42,7 @@ class Copilot:
         self._sign_cache: dict[tuple[str, str], str | None] = {}
         self._last_drowsy = -1e9
         self.turns: list[Turn] = []
+        vehicle.kind = vehicle_kind
         if law is not None:
             vehicle.law = law
 

@@ -120,3 +120,19 @@ def test_law_lookup_uses_raw_text_not_restored():
                  restorer=lambda t: "vượt đến do bị phát bao nhiêu")
     asyncio.run(cp.on_speech("vuot den do bi phat bao nhieu"))
     assert asked == ["vuot den do bi phat bao nhieu"]
+
+
+def test_sign_tool_uses_vehicle_kind_and_speak_fine():
+    seen = []
+
+    class Law:
+        def lookup_sign(self, code, vehicle=None, k=3):
+            seen.append(vehicle)
+            hit = {"text": "Điều 6\n3. Phạt tiền từ 3.000.000 đồng đến 5.000.000 đồng đối với ..."}
+            return SimpleNamespace(name="tốc độ tối đa cho phép", hits=[hit], speak_fine=False)
+
+    v = VehicleNoVifc(speed_kmh=40)
+    Copilot(EventBus(), v, FakeBrain(), Law(), say=lambda t: None, vehicle_kind="xe máy")
+    out = v._t_lookup_sign("P.127")
+    assert seen == ["xe máy"]
+    assert "triệu" not in out
