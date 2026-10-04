@@ -26,7 +26,7 @@ Ghép 4 repo thành phần:
 |---|---|
 | [vn-traffic-law-rag](https://github.com/DuongCodeAI/vn-traffic-law-rag) | tra luật, biển báo -> điều khoản xử phạt |
 | [vn-dashcam-vision](https://github.com/DuongCodeAI/vn-dashcam-vision) | nhận diện biển báo, phát sự kiện sau khi nhiều frame đồng ý |
-| [vi-diacritics-transformer](https://github.com/DuongCodeAI/vi-diacritics-transformer) | thêm dấu cho lệnh gõ không dấu |
+| [vi-diacritics-transformer](https://github.com/DuongCodeAI/vi-diacritics-transformer) | thêm dấu cho lệnh gõ không dấu (chỉ để LLM hiểu lệnh; tra luật dùng câu gốc vì restorer hay sai từ khoá luật) |
 | [vi-function-calling-slm](https://github.com/DuongCodeAI/vi-function-calling-slm) | "bộ não" gọi tool, model 1.7B chạy offline |
 
 ## Cảnh báo biển báo (output thật, dữ liệu luật thật, chạy trên laptop)
@@ -58,7 +58,7 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
 | tra luật cho biển báo | < 1 ms | biển cấm/hiệu lệnh ghim sẵn điểm luật; biển còn lại (tốc độ, chiều cao) tìm kiếm ~0.7-1 s, có cache |
 | biển báo -> câu cảnh báo | ~2 ms | regex lấy mức phạt, không gọi LLM |
 | STT PhoWhisper-small int8 | **~3.1 s** | nút thắt chính: Whisper luôn chạy encoder trên cửa sổ 30 s; tiny 0.5 s nhưng WER gấp ~4 lần (bảng dưới) |
-| function calling Qwen3-1.7B Q4 | chưa đo | |
+| function calling Qwen3-1.7B Q4 | chưa đo | đợi GGUF fine-tune (đang train); bản Qwen3 gốc chưa fine-tune: ~1.7-2.6 s/lệnh |
 | TTS Piper (vi_VN-vais1000-medium) | ~0.3 s | câu ngắn ~0.2 s, câu cảnh báo dài nhất ~0.7 s; RTF ~0.1 |
 | mục tiêu lệnh giọng nói end-to-end | < 1.5 s | **chưa đạt**: riêng STT đã ~3 s, cả vòng ước ~4-6 s trên laptop CPU |
 
@@ -118,9 +118,11 @@ nên demo dùng bản gốc đổi sang CTranslate2 int8. Muốn thử lại th�
 
 ```bash
 pip install -e ".[parts,live]"
-python scripts/download_models.py           # ~1.6GB vào models/
+python scripts/download_models.py           # ~1.6GB vào models/; STT tự đổi PhoWhisper sang CT2 (cần torch + transformers)
 copilot chat                                # gõ lệnh, không cần mic/camera
-copilot replay --dashcam drive.mp4 --cabin face.mp4 --script demo/script.yaml --speak
+python scripts/make_voice_cmds.py           # tạo wav lệnh (giọng Piper) cho demo/script_voice.yaml
+copilot replay --script demo/script_voice.yaml          # lệnh đi qua STT thật, log latency vào logs/replay.json
+copilot replay --dashcam drive.mp4 --cabin face.mp4 --script demo/script.yaml --speak   # đủ camera + loa
 ```
 
 Cấu hình đường dẫn trong `configs/default.yaml`. Thành phần nào thiếu model thì tự tắt và báo.
@@ -132,5 +134,6 @@ thêm Secret `HF_TOKEN`. Checkpoint + model lưu vào Google Drive (`MyDrive/ai-
 ## Hạn chế
 
 - Xe là giả lập (`vehicle.py`); tool dẫn đường / trạm sạc trả dữ liệu mẫu.
+- Lệnh giọng nói end-to-end trên laptop CPU chưa đạt 1.5 s (STT small ~3 s, xem mục STT).
 - STT dùng PhoWhisper-small gốc (BSD-3). VIVOS (CC BY-NC-SA) chỉ dùng để đánh giá và thử fine-tune.
 - Phát hiện buồn ngủ thử bằng webcam laptop, chưa thử trong cabin thật (ánh sáng, góc camera khác).

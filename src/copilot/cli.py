@@ -44,6 +44,9 @@ def build(cfg: dict, need_brain: bool = True):
 
         b = cfg["brain"]
         if b["backend"] == "llama_cpp":
+            if not os.path.exists(b["gguf"]):
+                raise SystemExit(f"chưa có model gọi tool {b['gguf']}: chạy `python scripts/download_models.py --only brain`"
+                                 " hoặc đổi brain.backend sang openai (Groq, cần GROQ_API_KEY) trong configs/default.yaml")
             brain = FunctionCaller("llama_cpp", b["gguf"], n_threads=cfg["threads"])
         else:  # Groq hoặc llama.cpp server, dùng khi máy quá yếu / chưa có GGUF
             brain = FunctionCaller("openai", b["model"], base_url=b["base_url"], api_key=os.getenv("GROQ_API_KEY"))

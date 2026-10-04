@@ -56,5 +56,12 @@ if __name__ == "__main__":
     ap.add_argument("--only", nargs="+", default=["brain", "stt", "tts", "face", "dashcam", "diacritics"])
     ap.add_argument("--stt-size", default="small", choices=["tiny", "base", "small"])
     args = ap.parse_args()
+    failed = []
     for n in args.only:
-        get(n, args.stt_size)
+        try:
+            get(n, args.stt_size)
+        except Exception as e:  # repo HF chưa có (model chưa train xong) -> bỏ qua, các phần khác vẫn tải
+            print(f"bỏ qua {n}: {type(e).__name__}: {str(e).splitlines()[0][:150]}")
+            failed.append(n)
+    if failed:
+        print("chưa tải được:", ", ".join(failed), "-> copilot tự tắt các thành phần này")
