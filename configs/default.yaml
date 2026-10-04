@@ -11,6 +11,6 @@ brain:
   gguf: models/vi-fc-qwen3-1.7b-Q4_K_M.gguf
   base_url: https://api.groq.com/openai/v1          # dùng khi backend=openai
   model: openai/gpt-oss-20b
-stt: models/phowhisper-small-ct2-int8
+stt: models/phowhisper-tiny-ct2-int8                # small chính xác hơn chút nhưng ~3 s/câu trên laptop (README)
 tts: models/piper/vi_VN-vais1000-medium.onnx
 face: models/face_landmarker.task

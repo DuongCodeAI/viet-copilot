@@ -57,7 +57,7 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
 |---|---|---|
 | tra luật cho biển báo | < 1 ms | biển cấm/hiệu lệnh ghim sẵn điểm luật; biển còn lại (tốc độ, chiều cao) tìm kiếm ~0.7-1 s, có cache |
 | biển báo -> câu cảnh báo | ~2 ms | regex lấy mức phạt, không gọi LLM |
-| STT PhoWhisper-small int8 | **~3.1 s** / câu | bản gốc vinai (không fine-tune), CT2 int8, beam 1. Đo 20 câu lệnh ~1.2 s tổng hợp bằng Piper; 8 luồng chỉ còn 2.9 s. Whisper luôn chạy encoder trên cửa sổ 30 s nên câu ngắn cũng tốn bằng câu dài: đây là nút thắt chính, vượt mục tiêu 1.5 s |
+| STT PhoWhisper-tiny int8 (mặc định) | ~0.5-0.8 s | so sánh 3 size ở bảng dưới; dao động theo tải CPU |
 | function calling Qwen3-1.7B Q4 | chưa đo | |
 | TTS Piper (vi_VN-vais1000-medium) | ~0.3 s | câu ngắn ~0.2 s, câu cảnh báo dài nhất ~0.7 s; RTF ~0.1 |
 | mục tiêu lệnh giọng nói end-to-end | < 1.5 s | |
@@ -73,7 +73,27 @@ báo, chưa thấy cặp nào sai. 16 cặp còn im lặng là biển chỉ dẫ
   function-calling) chặn lại lần nữa nếu model vẫn gọi tool.
 - **Buồn ngủ hiệu chỉnh theo người**: 10 s đầu đo EAR lúc mở mắt của chính tài xế, ngưỡng nhắm = 75%;
   ngưỡng cố định 0.25 báo nhầm người mắt một mí.
-- **STT: dùng PhoWhisper-small gốc, không dùng bản fine-tune có ồn** (xem kết quả dưới).
+- **STT: PhoWhisper gốc (không dùng bản fine-tune có ồn), size tiny** vì small ~3 s/câu trên laptop (xem 2 mục dưới).
+
+## STT trên laptop: chọn size nào
+
+PhoWhisper gốc của vinai, CTranslate2 int8, CPU 4 luồng, beam 1, `vad_filter` (giống `speech.STT`).
+20 câu lệnh trong xe (118 từ) tổng hợp bằng Piper rồi resample 16 kHz, mỗi câu ~1.2 s tiếng + 0.5 s lặng;
+cùng một bộ audio cho cả 3 model, chạy 2-3 lần: `python scripts/stt_bench.py models/phowhisper-tiny-ct2-int8`.
+
+| size | model | p50 / câu | WER (giọng Piper) |
+|---|---|---|---|
+| tiny | 42 MB | **0.53-0.84 s** | 23.7% |
+| base | 77 MB | 0.93-1.12 s | 29.7% |
+| small | 240 MB | 3.05-3.15 s | **20.3%** |
+
+- Whisper luôn chạy encoder trên cửa sổ 30 s, nên câu lệnh 1 s cũng tốn gần bằng câu 30 s: small mất ~3 s, riêng
+  nó đã vượt ngân sách 1.5 s cho cả vòng STT → LLM → TTS. 8 luồng chỉ còn 2.9 s, không cứu được.
+- WER trên giọng tổng hợp chỉ để so 3 size với nhau (1 từ = 0.85%): cả 3 cùng sai ở chỗ giọng Piper khó nghe
+  ("sân bay" → "sân bài", "sưởi ghế" → "sở khế"). tiny chỉ kém small 3.4 điểm mà nhanh gấp ~5 lần → chọn tiny.
+  Base kém hơn cả tiny trên bộ này; mẫu nhỏ, nên không kết luận base tệ hơn tiny nói chung.
+- Chưa đo: WER của tiny trên VIVOS và trên ồn (bảng dưới chỉ có small), và trên giọng thật thu bằng mic.
+  Câu rất ngắn dễ sai nhất ("tắt nhạc đi" → "các nhạc điện" ở cả tiny và small).
 
 ## Fine-tune STT với tiếng ồn: thử rồi, kém hơn bản gốc
 
