@@ -49,7 +49,7 @@ xe máy P.123a  Phía trước có biển cấm rẽ trái. Xe máy vi phạm b�
 | biển báo -> câu cảnh báo | ~2 ms | regex lấy mức phạt, không gọi LLM |
 | STT PhoWhisper-small int8 | chưa đo | |
 | function calling Qwen3-1.7B Q4 | chưa đo | |
-| TTS Piper | chưa đo | |
+| TTS Piper (vi_VN-vais1000-medium) | ~0.3 s | câu ngắn ~0.2 s, câu cảnh báo dài nhất ~0.7 s; RTF ~0.1 |
 | mục tiêu lệnh giọng nói end-to-end | < 1.5 s | |
 
 ## Quyết định thiết kế
