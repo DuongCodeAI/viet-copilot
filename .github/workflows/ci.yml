@@ -9,5 +9,7 @@ jobs:
         with:
           python-version: "3.11"
       - run: pip install -e ".[dev]"
+      # 2 repo thành phần nhẹ (không kèm model) cho test dùng tool schema và hàm xử lý text
+      - run: pip install "vnlaw-rag @ git+https://github.com/DuongCodeAI/vn-traffic-law-rag" "vi-fc @ git+https://github.com/DuongCodeAI/vi-function-calling-slm"
       - run: ruff check src tests scripts
       - run: pytest -q
