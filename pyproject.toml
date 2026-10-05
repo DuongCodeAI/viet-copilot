@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Trợ lý lái xe tiếng Việt chạy offline trên laptop: nghe lệnh, nhìn đường, theo dõi tài xế, tra luật"
 readme = "README.md"
 requires-python = ">=3.10"
+license = "MIT"
 authors = [{ name = "Tiến Dương", email = "duongcodeai2@gmail.com" }]
 dependencies = ["numpy>=1.26", "pyyaml>=6"]
 
@@ -22,7 +23,7 @@ dev = ["pytest>=8", "ruff>=0.5", "pytest-asyncio>=0.23"]
 copilot = "copilot.cli:main"
 
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
