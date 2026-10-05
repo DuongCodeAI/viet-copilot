@@ -31,7 +31,8 @@ def get(name: str, stt_size: str = "small"):
     if name == "brain":
         snapshot_download(f"{HF_USER}/vi-fc-qwen3-1.7b-GGUF", allow_patterns=["*Q4_K_M.gguf"], local_dir=M)
     elif name == "stt":
-        # bản fine-tune có ồn kém hơn bản gốc (README) -> dùng PhoWhisper gốc; small vì tiny/base WER VIVOS cao gấp ~5 lần
+        # bản fine-tune có ồn kém hơn bản gốc (README) -> dùng PhoWhisper gốc;
+        # small vì tiny/base WER VIVOS cao gấp ~4 lần
         subprocess.run(["ct2-transformers-converter", "--model", f"vinai/PhoWhisper-{stt_size}", "--output_dir",
                         str(M / f"phowhisper-{stt_size}-ct2-int8"), "--quantization", "int8",
                         "--copy_files", "tokenizer.json", "preprocessor_config.json", "--force"], check=True)

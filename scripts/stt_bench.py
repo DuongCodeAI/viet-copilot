@@ -61,13 +61,14 @@ def main():
         for s in SENTS:
             a, _ = tts.synth(s)
             a = resample(a.astype(np.float32) / 32768, tts.sr)
-            audios.append(np.concatenate([np.zeros(4000, np.float32), a, np.zeros(4000, np.float32)]))  # 0.25 s lặng 2 đầu
+            pad = np.zeros(4000, np.float32)  # 0.25 s lặng 2 đầu
+            audios.append(np.concatenate([pad, a, pad]))
         np.savez(cache, **{f"a{i}": a for i, a in enumerate(audios)})
 
     stt = STT(args.model, threads=args.threads)
     stt(audios[0])  # warm-up
     ms, rtf, errs, words, rows = [], [], 0, 0, []
-    for s, a in zip(SENTS, audios):
+    for s, a in zip(SENTS, audios, strict=True):
         t0 = time.perf_counter()
         tr = stt(a)
         dt = (time.perf_counter() - t0) * 1e3
@@ -77,7 +78,8 @@ def main():
         rtf.append(dt / 1000 / (len(a) / 16000))
         rows.append({"ref": s, "hyp": tr.text, "ms": round(dt), "sec": round(len(a) / 16000, 2)})
     ms_s = sorted(ms)
-    res = {"threads": args.threads, "n": len(SENTS), "audio_sec_mean": round(float(np.mean([r["sec"] for r in rows])), 2),
+    res = {"threads": args.threads, "n": len(SENTS),
+           "audio_sec_mean": round(float(np.mean([r["sec"] for r in rows])), 2),
            "p50_ms": round(ms_s[len(ms_s) // 2]), "p95_ms": round(ms_s[int(len(ms_s) * 0.95) - 1]),
            "rtf_mean": round(float(np.mean(rtf)), 3), "wer_tts": round(errs / words, 4), "rows": rows}
     json.dump(res, open("logs/stt_bench.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
