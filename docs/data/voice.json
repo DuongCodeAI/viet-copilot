@@ -1,0 +1,286 @@
+[
+ {
+  "input": "nắng quá cho máy lạnh xuống hai mươi hai độ đi.",
+  "model_input": "nắng quá cho máy lạnh xuống hai mươi hai độ đi.",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "set_climate",
+     "arguments": {
+      "temperature": 22
+     }
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Đã chỉnh điều hoà tất cả 22 độ.",
+  "audio_out": "audio/say_829ccaaae8.mp3",
+  "ms": {
+   "stt": 3335,
+   "brain": 2351,
+   "tools": 0,
+   "tts": 188
+  },
+  "said": "nóng quá, cho máy lạnh xuống 22 độ đi",
+  "audio_in": "audio/cmd_01.mp3"
+ },
+ {
+  "input": "tin con bảo e hiu.",
+  "model_input": "tin con bảo e hiu.",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "read_messages",
+     "arguments": {}
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Không có tin nhắn mới.",
+  "audio_out": "audio/say_003bcdd9ea.mp3",
+  "ms": {
+   "stt": 2995,
+   "brain": 1363,
+   "tools": 0,
+   "tts": 107
+  },
+  "said": "pin con bao nhieu",
+  "audio_in": "audio/cmd_02.mp3"
+ },
+ {
+  "input": "mở cửa sau bên trái giúp mình.",
+  "model_input": "mở cửa sau bên trái giúp mình.",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "open_window",
+     "arguments": {
+      "position": "rear_left"
+     }
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Mở 100% cửa sổ sau trái.",
+  "audio_out": "audio/say_b8949deb8a.mp3",
+  "ms": {
+   "stt": 3224,
+   "brain": 2032,
+   "tools": 0,
+   "tts": 191
+  },
+  "said": "mở cửa sau bên trái giúp mình",
+  "audio_in": "audio/cmd_03.mp3"
+ },
+ {
+  "input": "tìm trạng sạc nhanh gần đây.",
+  "model_input": "tìm trạng sạc nhanh gần đây.",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "find_charging_station",
+     "arguments": {
+      "fast_only": true
+     }
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Có trạm sạc nhanh cách 3,2 km trên đường đi, còn 2 cổng trống. Anh có muốn dẫn đường tới đó không?",
+  "audio_out": "audio/say_2bc338a568.mp3",
+  "ms": {
+   "stt": 3183,
+   "brain": 1856,
+   "tools": 0,
+   "tts": 476
+  },
+  "said": "tìm trạm sạc nhanh gần đây",
+  "audio_in": "audio/cmd_04.mp3"
+ },
+ {
+  "input": "vượt đèn vàng có bị phạt không.",
+  "model_input": "vượt đèn vàng có bị phạt không.",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "lookup_traffic_law",
+     "arguments": {
+      "question": "vượt đèn vàng có bị phạt không."
+     }
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Theo Điểm b, Khoản 9, Điều 6, Nghị định 168/2024/NĐ-CP: Ô tô vi phạm bị phạt 18 triệu đến 20 triệu đồng, trừ 4 điểm bằng lái.",
+  "audio_out": "audio/say_ce8b9a67b6.mp3",
+  "ms": {
+   "stt": 3307,
+   "brain": 3805,
+   "tools": 1031,
+   "tts": 884
+  },
+  "said": "vượt đèn vàng có bị phạt không",
+  "audio_in": "audio/cmd_05.mp3"
+ },
+ {
+  "input": "bất bại lạm trơ.",
+  "model_input": "bất bại lạm trơ.",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "refuse",
+   "calls": [],
+   "notes": []
+  },
+  "reply": "Trời đang mưa, lái xe mà không có đèn lúc này không an toàn. Bạn dừng hẳn xe rồi tắt đèn nhé.",
+  "audio_out": "audio/say_4dcd74c877.mp3",
+  "ms": {
+   "stt": 3299,
+   "brain": 3709,
+   "tts": 547
+  },
+  "said": "bật bài Lạc Trôi",
+  "audio_in": "audio/cmd_06.mp3"
+ },
+ {
+  "input": "mo khoa cua giup minh",
+  "model_input": "mo khóa của giúp mình",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "refuse",
+   "calls": [],
+   "notes": [
+    "guard: unlock_while_moving"
+   ],
+   "model": {
+    "kind": "call",
+    "calls": [
+     {
+      "name": "unlock_doors",
+      "arguments": {}
+     }
+    ],
+    "text": ""
+   }
+  },
+  "reply": "Xe đang chạy 40 km/h, mở khoá cửa lúc này không an toàn. Bạn dừng hẳn xe rồi mình mở nhé.",
+  "audio_out": "audio/say_8e2746da32.mp3",
+  "ms": {
+   "restore": 8,
+   "brain": 2440,
+   "tts": 630
+  }
+ },
+ {
+  "input": "mở khoá cửa giúp mình",
+  "model_input": "mở khoá cửa giúp mình",
+  "speed": 0,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "unlock_doors",
+     "arguments": {}
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Đã mở khoá cửa.",
+  "audio_out": "audio/say_29c88d311c.mp3",
+  "ms": {
+   "brain": 2931,
+   "tools": 0,
+   "tts": 104
+  }
+ },
+ {
+  "input": "tắt đèn đi",
+  "model_input": "tắt đèn đi",
+  "speed": 60,
+  "night": true,
+  "action": {
+   "kind": "ask",
+   "calls": [],
+   "notes": []
+  },
+  "reply": "Bạn muốn chỉnh đèn sang chế độ nào: tắt, tự động, cốt hay pha?",
+  "audio_out": "audio/say_9f9e59005b.mp3",
+  "ms": {
+   "brain": 3073,
+   "tts": 321
+  }
+ },
+ {
+  "input": "mở hết cửa sổ ra",
+  "model_input": "mở hết cửa sổ ra",
+  "speed": 100,
+  "night": false,
+  "action": {
+   "kind": "ask",
+   "calls": [],
+   "notes": [
+    "guard: window_high_speed"
+   ],
+   "model": {
+    "kind": "call",
+    "calls": [
+     {
+      "name": "open_window",
+      "arguments": {
+       "position": "all"
+      }
+     }
+    ],
+    "text": ""
+   }
+  },
+  "reply": "Xe đang chạy 100 km/h, mở cửa sổ 100% sẽ rất ồn và gió mạnh. Bạn chắc chắn muốn mở chứ?",
+  "audio_out": "audio/say_1b40d585c4.mp3",
+  "ms": {
+   "brain": 3085,
+   "tts": 586
+  }
+ },
+ {
+  "input": "xe máy vượt đèn đỏ phạt bao nhiêu",
+  "model_input": "xe máy vượt đèn đỏ phạt bao nhiêu",
+  "speed": 40,
+  "night": false,
+  "action": {
+   "kind": "call",
+   "calls": [
+    {
+     "name": "lookup_traffic_law",
+     "arguments": {
+      "question": "xe máy vượt đèn đỏ phạt bao nhiêu"
+     }
+    }
+   ],
+   "notes": []
+  },
+  "reply": "Theo Điểm c, Khoản 7, Điều 7, Nghị định 168/2024/NĐ-CP: Xe máy vi phạm bị phạt 4 triệu đến 6 triệu đồng, trừ 4 điểm bằng lái.",
+  "audio_out": "audio/say_760f00b33d.mp3",
+  "ms": {
+   "brain": 4129,
+   "tools": 699,
+   "tts": 827
+  }
+ }
+]

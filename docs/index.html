@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>viet-copilot · demo</title>
+<meta name="description" content="Trợ lý lái xe tiếng Việt chạy offline: nhận diện biển báo + cảnh báo mức phạt, theo dõi buồn ngủ qua webcam, lệnh giọng nói.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;800&family=Be+Vietnam+Pro:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div class="plate">
+    <div class="plate-inner">
+      <h1>viet-copilot</h1>
+      <p>Trợ lý lái xe tiếng Việt chạy offline trên laptop không GPU</p>
+    </div>
+  </div>
+  <p class="lede">Ba phần của hệ thống, thử ngay trên trình duyệt. Hai phần đầu chạy model thật trên máy bạn,
+    không gửi ảnh hay video đi đâu. Phần lệnh giọng nói cần model 1 GB nên là output thật ghi lại trên laptop.
+    <a href="https://github.com/DuongCodeAI/viet-copilot">Mã nguồn trên GitHub</a></p>
+</header>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" id="tab-signs" aria-controls="signs" aria-selected="true"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><circle cx="10" cy="10" r="7.5" fill="#fff" stroke="var(--stop)" stroke-width="3.5"/></svg>Biển báo</button>
+  <button role="tab" id="tab-drowsy" aria-controls="drowsy" aria-selected="false"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><path d="M1.5 10S5 4.5 10 4.5 18.5 10 18.5 10 15 15.5 10 15.5 1.5 10 1.5 10Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="10" cy="10" r="2.6" fill="currentColor"/></svg>Buồn ngủ</button>
+  <button role="tab" id="tab-voice" aria-controls="voice" aria-selected="false"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true"><rect x="7" y="2" width="6" height="10" rx="3" fill="currentColor"/><path d="M4.5 9.5a5.5 5.5 0 0 0 11 0M10 15v3" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Lệnh giọng nói</button>
+</nav>
+
+<main>
+<!-- ============ BIỂN BÁO ============ -->
+<section id="signs" role="tabpanel" aria-labelledby="tab-signs">
+  <div class="head">
+    <div>
+      <span class="badge live">Chạy trên máy bạn</span>
+      <h2>Thấy biển báo, nói mức phạt</h2>
+      <p class="muted">YOLO11n 1 lớp tìm biển, SignNet (CNN tự thiết kế) gọi tên 52 loại biển. Cả hai là ONNX int8
+        (3,2 MB + 1,2 MB) chạy bằng onnxruntime-web. Câu cảnh báo lấy mức phạt từ NĐ 168/2024 theo đúng loại xe,
+        không qua LLM.</p>
+    </div>
+    <div class="seg" role="radiogroup" aria-label="Loại xe">
+      <button role="radio" aria-checked="true" data-kind="ô tô">Ô tô</button>
+      <button role="radio" aria-checked="false" data-kind="xe máy">Xe máy</button>
+    </div>
+  </div>
+
+  <div class="thumbs" id="thumbs" aria-label="Ảnh mẫu"></div>
+  <label class="upload">
+    <input type="file" id="sign-file" accept="image/*">
+    Thử ảnh của bạn
+  </label>
+
+  <div class="sign-grid">
+    <figure class="stage">
+      <canvas id="sign-canvas" width="960" height="540" aria-label="Ảnh và khung biển báo phát hiện được"></canvas>
+      <figcaption id="sign-meta" class="mono muted">đang tải model…</figcaption>
+    </figure>
+    <div class="warns" id="warns" aria-live="polite"></div>
+  </div>
+  <p class="note">Ảnh mẫu thuộc tập test của <a href="https://www.kaggle.com/datasets/maitam/vietnamese-traffic-signs">VNTS</a>
+    (CC BY-SA 4.0), model chưa thấy lúc train. Trên video, trợ lý chỉ nói khi ≥ 3 frame cùng đồng ý; ở đây chỉ có
+    1 ảnh nên biển có độ tin cậy dưới 60% được để riêng, không đọc.</p>
+</section>
+
+<!-- ============ BUỒN NGỦ ============ -->
+<section id="drowsy" role="tabpanel" aria-labelledby="tab-drowsy" hidden>
+  <div class="head">
+    <div>
+      <span class="badge live">Chạy trên máy bạn</span>
+      <h2>Mắt nhắm quá lâu thì nhắc nghỉ</h2>
+      <p class="muted">MediaPipe Face Landmarker lấy 478 điểm trên mặt, 10 frame/giây. EAR (độ mở mắt) và PERCLOS
+        (% thời gian nhắm trong 60 giây) tính giống hệt <code>drowsiness.py</code>. 10 giây đầu đo mắt mở của chính bạn,
+        ngưỡng nhắm = 75% mức đó.</p>
+    </div>
+  </div>
+  <div class="cam-actions">
+    <button class="primary" id="cam-start">Bật webcam</button>
+    <label class="upload inline"><input type="file" id="cam-file" accept="video/*">Hoặc chọn video</label>
+    <span id="cam-status" class="muted"></span>
+  </div>
+  <div class="drowsy-grid">
+    <div class="cam">
+      <video id="cam-video" playsinline muted></video>
+      <canvas id="cam-overlay"></canvas>
+      <div class="cam-empty" id="cam-empty">Webcam chỉ xử lý trên máy bạn.<br>Thử nhắm mắt 2 giây sau khi hiệu chỉnh xong.</div>
+    </div>
+    <div class="meters">
+      <div class="level" id="lv"><span>Trạng thái</span><strong id="lv-text">chưa bật</strong></div>
+      <dl>
+        <div><dt>EAR</dt><dd class="mono" id="m-ear">–</dd></div>
+        <div><dt>Ngưỡng nhắm</dt><dd class="mono" id="m-thr">–</dd></div>
+        <div><dt>PERCLOS 60 s</dt><dd class="mono" id="m-perclos">–</dd></div>
+        <div><dt>Nhắm liên tục</dt><dd class="mono" id="m-closed">–</dd></div>
+        <div><dt>Ngáp (2 phút)</dt><dd class="mono" id="m-yawn">–</dd></div>
+        <div><dt>Face Landmarker</dt><dd class="mono" id="m-ms">–</dd></div>
+      </dl>
+      <canvas id="ear-chart" height="120" aria-label="EAR 20 giây gần nhất"></canvas>
+      <p class="tiny muted">EAR 20 giây gần nhất, vạch đứt là ngưỡng nhắm.</p>
+    </div>
+  </div>
+  <div class="alert" id="alert" hidden><strong id="alert-title"></strong><span id="alert-text"></span></div>
+  <p class="note">Báo động khi nhắm mắt liên tục ≥ 1,5 s hoặc PERCLOS ≥ 30%; nhắc nghỉ khi PERCLOS ≥ 15% hoặc ngáp
+    ≥ 3 lần trong 2 phút. Câu nói và giọng Piper giống trợ lý thật. Mới thử bằng webcam laptop, chưa thử trong cabin xe.</p>
+</section>
+
+<!-- ============ LỆNH GIỌNG NÓI ============ -->
+<section id="voice" role="tabpanel" aria-labelledby="tab-voice" hidden>
+  <div class="head">
+    <div>
+      <span class="badge rec">Output thật ghi trên laptop</span>
+      <h2>Nghe lệnh, gọi đúng chức năng của xe</h2>
+      <p class="muted">PhoWhisper-small (STT) → Qwen3-1.7B fine-tune gọi tool (GGUF Q4, 1 GB, llama.cpp) → guard
+        luật an toàn → xe giả lập → Piper đọc câu trả lời. Model quá nặng cho trình duyệt nên đây là kết quả của
+        <code>scripts/build_web_demo.py</code> trên CPU Ryzen 5 5625U, giữ nguyên cả những câu sai.</p>
+    </div>
+  </div>
+  <div id="turns"></div>
+  <p class="note" id="voice-note"></p>
+</section>
+</main>
+
+<footer>
+  <p>Một phần của bộ 5 dự án <a href="https://github.com/DuongCodeAI">trợ lý lái xe tiếng Việt chạy offline</a> · Tiến Dương.
+    Thành phần: <a href="https://github.com/DuongCodeAI/vn-dashcam-vision">vn-dashcam-vision</a>,
+    <a href="https://github.com/DuongCodeAI/vn-traffic-law-rag">vn-traffic-law-rag</a>,
+    <a href="https://github.com/DuongCodeAI/vi-function-calling-slm">vi-function-calling-slm</a>,
+    <a href="https://github.com/DuongCodeAI/vi-diacritics-transformer">vi-diacritics-transformer</a>.</p>
+  <p class="tiny">Ảnh VNTS: CC BY-SA 4.0. Face Landmarker: Apache 2.0. Giọng Piper vi_VN-vais1000. Code: MIT.</p>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/onnxruntime-web@1.20.1/dist/ort.min.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
