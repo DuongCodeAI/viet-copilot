@@ -1,6 +1,6 @@
 """copilot chat   - gõ lệnh bằng chữ (có thể không dấu), không cần mic/camera
 copilot replay --dashcam drive.mp4 --cabin face.mp4 --script demo/script.yaml   - quay demo
-copilot live --dashcam drive.mp4 --cabin 0   - mic + webcam thật
+copilot replay --cabin 0 --script demo/script.yaml   - webcam thật (số = chỉ số webcam) thay cho video tài xế
 
 Thành phần nào thiếu model thì tự tắt và báo, để vẫn chạy thử được từng phần.
 """
@@ -108,7 +108,8 @@ async def _replay(args, cfg):
     if args.dashcam:
         tasks.append(dashcam_source(bus, args.dashcam, cfg["dashcam_models"], stats=stats))
     if args.cabin:
-        tasks.append(cabin_source(bus, args.cabin, cfg["face"], stats=stats))
+        cabin = int(args.cabin) if args.cabin.isdigit() else args.cabin
+        tasks.append(cabin_source(bus, cabin, cfg["face"], stats=stats))
     if args.script:
         tasks.append(script_source(bus, args.script, stt, stats=stats))
     await asyncio.gather(*tasks)

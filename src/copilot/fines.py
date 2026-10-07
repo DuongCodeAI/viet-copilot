@@ -44,6 +44,10 @@ def _expanded_from(h) -> str | None:
     return h.expanded_from if hasattr(h, "expanded_from") else h.get("expanded_from")
 
 
+def _citation(h) -> str:
+    return h.citation if hasattr(h, "citation") else h.get("citation", "")
+
+
 def sign_warning(sign_name: str, vehicle: str, hits: list, speak_fine: bool = True) -> str:
     """hits: kết quả LawRAG.lookup_sign (đã đúng loại xe). Lấy mức phạt ở đoạn đầu tiên có mức phạt.
 
@@ -57,8 +61,23 @@ def sign_warning(sign_name: str, vehicle: str, hits: list, speak_fine: bool = Tr
     main = next((h for h in hits if parse_fine(_text(h)) and not _expanded_from(h)), None)
     if main is None:
         return msg
+    return msg + _fine_phrase(main, hits, vehicle)
+
+
+def _fine_phrase(main, hits: list, vehicle: str) -> str:
     lo, hi = parse_fine(_text(main))
-    msg += f" {vehicle.capitalize()} vi phạm bị phạt {speak_money(lo)} đến {speak_money(hi)} đồng"
+    msg = f" {vehicle.capitalize()} vi phạm bị phạt {speak_money(lo)} đến {speak_money(hi)} đồng"
     pts = next((p for h in hits if _expanded_from(h) and _expanded_from(h) == _id(main)
                 for p in [parse_points(_text(h))] if p), None)
     return msg + (f", trừ {pts} điểm bằng lái." if pts else ".")
+
+
+def law_brief(hits: list, vehicle: str) -> str | None:
+    """Trả lời câu hỏi luật khi không có LLM (offline): đọc mức phạt của đoạn luật hạng đầu có mức phạt.
+
+    Không tóm tắt được hành vi như LLM, nên luôn kèm trích dẫn để tài xế biết đang nghe điều nào.
+    """
+    main = next((h for h in hits if parse_fine(_text(h)) and not _expanded_from(h)), None)
+    if main is None:
+        return None
+    return f"Theo {_citation(main)}:" + _fine_phrase(main, hits, vehicle)

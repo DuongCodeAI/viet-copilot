@@ -118,8 +118,10 @@ def test_law_lookup_uses_raw_text_not_restored():
 
     cp = Copilot(EventBus(), Vehicle(speed_kmh=40), LawBrain(), say=lambda t: None,
                  restorer=lambda t: "vượt đến do bị phát bao nhiêu")
-    asyncio.run(cp.on_speech("vuot den do bi phat bao nhieu"))
+    turn = asyncio.run(cp.on_speech("vuot den do bi phat bao nhieu"))
     assert asked == ["vuot den do bi phat bao nhieu"]
+    # log giữ lại model đã gọi tool gì, để soát lại sau replay
+    assert turn.action["kind"] == "call" and turn.action["calls"][0]["name"] == "lookup_traffic_law"
 
 
 def test_sign_tool_uses_vehicle_kind_and_speak_fine():
@@ -151,3 +153,30 @@ def test_vehicle_matches_tool_schema_and_survives_bad_args():
     v = VehicleSim()
     assert "Đã tắt" in v.execute("set_climate", {"power": "off"})
     assert "chưa làm được" in v.execute("set_fan_speed", {"speed": 3})
+
+
+def test_law_tool_offline_reads_fine_for_current_vehicle():
+    from vnlaw_rag.llm import LLMError
+    from vnlaw_rag.retriever import Hit
+
+    class NoLLM:
+        def complete(self, *a, **kw):
+            raise LLMError("offline")
+
+    queries = []
+
+    class Law:
+        llm = NoLLM()
+
+        def search(self, q, k=5):
+            queries.append(q)
+            return [Hit({"id": "d6.k9.b", "citation": "Điểm b, Khoản 9, Điều 6",
+                         "text": "Phạt tiền từ 18.000.000 đồng đến 20.000.000 đồng"}, 1.0)]
+
+    v = VehicleNoVifc(speed_kmh=40)
+    v.law, v.kind = Law(), "ô tô"
+    out = v.execute("lookup_traffic_law", {"question": "vượt đèn vàng có bị phạt không"})
+    assert queries == ["vượt đèn vàng có bị phạt không ô tô"]  # không nói loại xe -> hỏi theo xe đang lái
+    assert out == "Theo Điểm b, Khoản 9, Điều 6: Ô tô vi phạm bị phạt 18 triệu đến 20 triệu đồng."
+    v.execute("lookup_traffic_law", {"question": "xe máy vượt đèn đỏ"})
+    assert queries[-1] == "xe máy vượt đèn đỏ"

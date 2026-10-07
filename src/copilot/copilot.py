@@ -25,6 +25,7 @@ class Turn:
     input: str
     output: str
     ms: dict = field(default_factory=dict)
+    action: dict | None = None  # lệnh giọng nói: model quyết định gì (call/ask/refuse, tool + tham số, guard)
 
 
 class Copilot:
@@ -65,6 +66,12 @@ class Copilot:
         t1 = time.perf_counter()
         action = await asyncio.to_thread(self.brain.decide, text, self.vehicle.state())
         ms["brain"] = (time.perf_counter() - t1) * 1e3
+        decided = {"kind": action.kind, "calls": [{"name": c.name, "arguments": dict(c.arguments)}
+                                                  for c in action.calls],
+                   "notes": list(getattr(action, "notes", []))}
+        model_action = getattr(action, "meta", {}).get("model_action")
+        if model_action and model_action.get("kind") != action.kind:  # guard đã ghi đè: giữ lại model định làm gì
+            decided["model"] = model_action
         if action.kind == "call" and action.calls:
             if text != raw:
                 # bản thêm dấu chỉ để LLM hiểu lệnh; tra luật dùng câu gốc vì restorer hay sai đúng từ khoá
@@ -79,7 +86,9 @@ class Copilot:
         else:
             out = action.text or "Xin lỗi, mình chưa hiểu ý anh."
         await self.say(out)
-        return self._log("speech", text, out, ms)
+        turn = self._log("speech", text, out, ms)
+        turn.action = decided
+        return turn
 
     async def on_sign(self, ev) -> Turn | None:
         now = self.clock()

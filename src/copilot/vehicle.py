@@ -120,9 +120,23 @@ class VehicleSim:
     def _t_lookup_traffic_law(self, question):
         if self.law is None:
             return "Chưa nạp dữ liệu luật."
-        ans = self.law.answer(question, k=4)
-        cite = f" (theo {ans.citations[0]['citation']})" if ans.citations else ""
-        return ans.answer + cite
+        from vnlaw_rag.answer import answer
+        from vnlaw_rag.vehicle import detect_vehicles
+
+        from .fines import law_brief
+
+        # câu hỏi không nói loại xe thì hỏi theo xe đang lái: NĐ 168 chia Điều theo loại xe, "vượt đèn vàng"
+        # không kèm loại xe từng lấy nhầm Điều 7 (xe máy) cho tài xế ô tô
+        asked = detect_vehicles(question)
+        q = question if asked else f"{question} {self.kind}"
+        hits = self.law.search(q, k=4)
+        ans = answer(q, hits, self.law.llm)
+        if ans.provider:
+            cite = f" (theo {ans.citations[0]['citation']})" if ans.citations else ""
+            return ans.answer + cite
+        # offline, không có LLM viết câu trả lời: đọc mức phạt bằng regex như cảnh báo biển báo
+        kind = {"oto": "ô tô", "moto": "xe máy"}.get(next(iter(asked)), self.kind) if len(asked) == 1 else self.kind
+        return law_brief(hits, kind) or ans.answer
 
     def _t_lookup_sign(self, code):
         if self.law is None:

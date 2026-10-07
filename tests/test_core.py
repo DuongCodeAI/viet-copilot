@@ -4,7 +4,7 @@ import numpy as np
 
 from copilot.bus import EventBus
 from copilot.drowsiness import LEFT_EYE, MOUTH, RIGHT_EYE, DrowsinessMonitor, ear
-from copilot.fines import parse_fine, sign_warning, speak_money
+from copilot.fines import law_brief, parse_fine, sign_warning, speak_money
 
 
 def test_bus_priority_order():
@@ -82,3 +82,15 @@ def test_fines_text():
     assert sign_warning("Cấm đỗ xe", "ô tô", [fine, other]).endswith("1 triệu đồng.")
     assert sign_warning("Tốc độ tối đa cho phép", "ô tô", [fine], speak_fine=False) == \
         "Phía trước có biển tốc độ tối đa cho phép."
+
+
+def test_law_brief_reads_fine_and_points_of_the_same_clause():
+    hits = [
+        {"id": "d6.k9.b", "citation": "Điểm b, Khoản 9, Điều 6",
+         "text": "9. Phạt tiền từ 18.000.000 đồng đến 20.000.000 đồng ... b) Không chấp hành hiệu lệnh của đèn tín hiệu"},
+        {"id": "d6.k16.d", "expanded_from": "d6.k9.b", "text": "d) ... bị trừ điểm giấy phép lái xe 4 điểm"},
+        {"id": "d6.k3.a", "citation": "Điểm a, Khoản 3, Điều 6", "text": "Phạt tiền từ 800.000 đồng đến 1.000.000 đồng"},
+    ]
+    assert law_brief(hits, "ô tô") == ("Theo Điểm b, Khoản 9, Điều 6: Ô tô vi phạm bị phạt 18 triệu đến 20 triệu đồng, "
+                                       "trừ 4 điểm bằng lái.")
+    assert law_brief([{"id": "x", "text": "Điều 3. Giải thích từ ngữ"}], "ô tô") is None
