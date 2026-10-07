@@ -32,7 +32,7 @@
 
 ## Việc cần làm
 - Đo latency thật từng thành phần khi có model function-calling + STT (lệnh `copilot replay` ghi `logs/replay.json`).
-- Quay video demo 2 phút.
+- Quay video demo 2 phút (đã có web demo trong docs/, còn thiếu video xe chạy thật).
 
 ## 04/10 chạy thử pipeline chữ với Qwen3-1.7B Q4_K_M gốc (chưa fine-tune), laptop CPU 4 luồng
 - warmup 25 s, brain p50 ~1.7 s (6 lệnh trong demo/script.yaml), thêm dấu 4 ms, TTS p50 ~0.3 s

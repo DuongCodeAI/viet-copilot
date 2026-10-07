@@ -7,12 +7,8 @@ __pycache__/
 *.egg-info/
 .ipynb_checkpoints/
 
-# index + model build trên Kaggle -> để trên HF Hub, không commit
-data/processed/dense*/
-models/
-results/*.json
-
-*.wav
-*.mp4
+# model tải bằng scripts/download_models.py (HF Hub), không commit; web demo có bản riêng trong docs/model
 models/
 logs/
+*.wav
+*.mp4
